@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  password  String
+  files     File[]   @relation("UserFiles")
+  createdAt DateTime @default(now())
+}
+
+model File {
+  id          String     @id @default(uuid())
+  name        String
+  format      String
+  url         String
+  user        User       @relation("UserFiles", fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  ocrResult   OcrResult? @relation("FileTranscription")
+  ocrResultId String?
+  createdAt   DateTime   @default(now())
+
+  @@unique([name, userId])
+}
+
+model OcrResult {
+  id           String        @id @default(uuid())
+  text         String
+  file         File          @relation("FileTranscription", fields: [fileId], references: [id], onDelete: Cascade)
+  fileId       String        @unique
+  llmResponses LLMResponse[] @relation("OcrResultResponses")
+  createdAt    DateTime      @default(now())
+
+  @@unique([id, fileId])
+}
+
+model LLMResponse {
+  id        String    @id @default(uuid())
+  question  String
+  response  String
+  ocrId     String
+  createdAt DateTime  @default(now())
+  ocrResult OcrResult @relation("OcrResultResponses", fields: [ocrId], references: [id], onDelete: Cascade)
+
+  @@unique([question, ocrId])
+}
