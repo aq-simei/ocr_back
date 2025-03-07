@@ -42,8 +42,6 @@ export class OcrService {
     body: { filename: string; ocrId: string },
     userId: string,
   ): Promise<Ocr> {
-    console.log('Getting content from ocr');
-    console.log(body);
     const file = await this.filesService.getFileByName(body.filename, userId);
     if (!file) {
       throw new Error('File not found');
